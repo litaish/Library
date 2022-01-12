@@ -677,6 +677,11 @@ namespace Library
             }
             // Returning a list of memberIDs to send email reminders to
             return memberEmail;
-        } 
+        }
+
+        private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
