@@ -33,5 +33,6 @@ namespace Library.Utils
             //creates a new connection
             conn = new NpgsqlConnection(connectionString);
         }
+        // THIS IS A TEST ON BRANCH EMAIL-SENDING
     }
 }
