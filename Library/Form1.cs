@@ -381,6 +381,7 @@ namespace Library
                 genreAdapter.Update((DataTable)dataGridView_genre.DataSource);
                 authorAdapter.Update((DataTable)dataGridView_author.DataSource);
                 languageAdapter.Update((DataTable)dataGridView_language.DataSource);
+
             }
             catch (Exception ex)
             {
@@ -645,5 +646,37 @@ namespace Library
                 }
             }
         }
+        // Returns datatable of member IDs that book return date is overdue and returned is false
+        public DataTable AddMembersForEmails()
+        {
+            // Initalizing a datatable that will save all member IDs that match the condition
+            DataTable memberEmail = new DataTable();
+            DataColumn memberColumn = new DataColumn();
+            memberEmail.Columns.Add(memberColumn);
+            memberColumn.ColumnName = "MemberID";
+
+            DateTime dayToday = DateTime.Today;
+            string s_today = dayToday.ToString("MM/dd/yyyy");
+
+            // Looping through all borrowings table due date column values.
+            for (int i = 0; i < advancedDataGridView_borrowings.RowCount; i++)
+            {
+                // Index of date_due = 4
+                var cellValue = advancedDataGridView_borrowings.Rows[i].Cells[4].Value;
+                // Index of member_id = 1
+                var memberID = advancedDataGridView_borrowings.Rows[i].Cells[1].Value.ToString();
+                // Index of is_returned = 5
+                var isReturned = advancedDataGridView_borrowings.Rows[i].Cells[5].Value.ToString();
+
+                if (cellValue.ToString() == s_today.ToString() && isReturned.ToString() == "false")
+                {
+                    DataRow row = memberEmail.NewRow();
+                    row["MemberID"] = memberID.ToString();
+                    
+                }
+            }
+            // Returning a list of memberIDs to send email reminders to
+            return memberEmail;
+        } 
     }
 }

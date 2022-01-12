@@ -99,5 +99,6 @@ namespace Library
             bsSelectMember.DataSource = advancedDataGridView_selectMember.DataSource;
             bsSelectMember.Filter = advancedDataGridView_selectMember.FilterString;
         }
+
     }
 }
