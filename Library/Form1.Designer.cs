@@ -148,15 +148,16 @@ namespace Library
             this.label_bookNumber = new System.Windows.Forms.Label();
             this.label_memberNumber = new System.Windows.Forms.Label();
             this.advancedDataGridView_borrowings = new ADGV.AdvancedDataGridView();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.label9 = new System.Windows.Forms.Label();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.label9 = new System.Windows.Forms.Label();
             this.dataGridView_membersForEmail = new System.Windows.Forms.DataGridView();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label10 = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.button_checkOverdue = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.tabEmail.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -290,7 +291,7 @@ namespace Library
             this.tableLayoutPanel_book.ColumnCount = 3;
             this.tableLayoutPanel_book.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 51.13636F));
             this.tableLayoutPanel_book.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 48.86364F));
-            this.tableLayoutPanel_book.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 168F));
+            this.tableLayoutPanel_book.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 169F));
             this.tableLayoutPanel_book.Controls.Add(this.dataGridView_genre, 0, 0);
             this.tableLayoutPanel_book.Controls.Add(this.dataGridView_language, 1, 0);
             this.tableLayoutPanel_book.Controls.Add(this.dataGridView_author, 2, 0);
@@ -369,7 +370,7 @@ namespace Library
             this.dataGridView_language.Location = new System.Drawing.Point(182, 3);
             this.dataGridView_language.Name = "dataGridView_language";
             this.dataGridView_language.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dataGridView_language.Size = new System.Drawing.Size(166, 327);
+            this.dataGridView_language.Size = new System.Drawing.Size(165, 327);
             this.dataGridView_language.TabIndex = 1;
             // 
             // dataGridView_author
@@ -401,10 +402,10 @@ namespace Library
             this.dataGridView_author.DefaultCellStyle = dataGridViewCellStyle63;
             this.dataGridView_author.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_author.EnableHeadersVisualStyles = false;
-            this.dataGridView_author.Location = new System.Drawing.Point(354, 3);
+            this.dataGridView_author.Location = new System.Drawing.Point(353, 3);
             this.dataGridView_author.Name = "dataGridView_author";
             this.dataGridView_author.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dataGridView_author.Size = new System.Drawing.Size(163, 327);
+            this.dataGridView_author.Size = new System.Drawing.Size(164, 327);
             this.dataGridView_author.TabIndex = 2;
             // 
             // panel_bookGroup
@@ -1415,17 +1416,6 @@ namespace Library
             this.tableLayoutPanel2.TabIndex = 0;
             this.tableLayoutPanel2.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel2_Paint);
             // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label9.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(3, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(308, 40);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Overdue members";
-            // 
             // tableLayoutPanel3
             // 
             this.tableLayoutPanel3.ColumnCount = 1;
@@ -1435,24 +1425,37 @@ namespace Library
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 2;
+            this.tableLayoutPanel3.RowCount = 3;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.33692F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 85.66309F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(314, 279);
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(313, 279);
             this.tableLayoutPanel3.TabIndex = 1;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label9.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.Location = new System.Drawing.Point(3, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(307, 37);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Overdue members";
             // 
             // dataGridView_membersForEmail
             // 
             this.dataGridView_membersForEmail.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView_membersForEmail.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView_membersForEmail.Location = new System.Drawing.Point(3, 43);
+            this.dataGridView_membersForEmail.Location = new System.Drawing.Point(3, 40);
             this.dataGridView_membersForEmail.Name = "dataGridView_membersForEmail";
-            this.dataGridView_membersForEmail.Size = new System.Drawing.Size(308, 233);
+            this.dataGridView_membersForEmail.Size = new System.Drawing.Size(307, 215);
             this.dataGridView_membersForEmail.TabIndex = 1;
             // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label10);
+            this.groupBox2.Controls.Add(this.button_checkOverdue);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(3, 294);
@@ -1465,11 +1468,23 @@ namespace Library
             // label10
             // 
             this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label10.Location = new System.Drawing.Point(6, 43);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(177, 21);
+            this.label10.Size = new System.Drawing.Size(188, 21);
             this.label10.TabIndex = 0;
             this.label10.Text = "Check for ovedue books";
+            // 
+            // button_checkOverdue
+            // 
+            this.button_checkOverdue.BackColor = System.Drawing.Color.BurlyWood;
+            this.button_checkOverdue.Location = new System.Drawing.Point(10, 67);
+            this.button_checkOverdue.Name = "button_checkOverdue";
+            this.button_checkOverdue.Size = new System.Drawing.Size(100, 32);
+            this.button_checkOverdue.TabIndex = 2;
+            this.button_checkOverdue.Text = "Check";
+            this.button_checkOverdue.UseVisualStyleBackColor = false;
+            this.button_checkOverdue.Click += new System.EventHandler(this.button_checkOverdue_Click);
             // 
             // LibraryForm
             // 
@@ -1644,6 +1659,7 @@ namespace Library
         private DataGridView dataGridView_membersForEmail;
         private GroupBox groupBox2;
         private Label label10;
+        private Button button_checkOverdue;
     }
 }
 

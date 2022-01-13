@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Npgsql;
 using Library.Utils;
+using System.Globalization;
 
 namespace Library
 {
@@ -656,23 +657,27 @@ namespace Library
             memberColumn.ColumnName = "MemberID";
 
             DateTime dayToday = DateTime.Today;
-            string s_today = dayToday.ToString("MM/dd/yyyy");
+            string s_today = dayToday.ToString("MM/dd/yyyy HH:mm");
 
             // Looping through all borrowings table due date column values.
-            for (int i = 0; i < advancedDataGridView_borrowings.RowCount; i++)
+            for (int i = 0; i < advancedDataGridView_borrowings.RowCount - 1; i++)
             {
                 // Index of date_due = 4
-                var cellValue = advancedDataGridView_borrowings.Rows[i].Cells[4].Value;
+                var cellValue = advancedDataGridView_borrowings.Rows[i].Cells[4].Value.ToString();
+                // Changing cellvalue date format to mm/dd/yyy format
+
+                DateTime convertedDate = Convert.ToDateTime(cellValue);
+                string formattedConvertedDate = convertedDate.ToString("MM/dd/yyyy HH:mm");
                 // Index of member_id = 1
-                var memberID = advancedDataGridView_borrowings.Rows[i].Cells[1].Value.ToString();
+                var memberID = advancedDataGridView_borrowings.Rows[i].Cells[1].Value;
                 // Index of is_returned = 5
                 var isReturned = advancedDataGridView_borrowings.Rows[i].Cells[5].Value.ToString();
 
-                if (cellValue.ToString() == s_today.ToString() && isReturned.ToString() == "false")
+                if (formattedConvertedDate.Trim() == s_today.ToString().Trim() && isReturned != "True")
                 {
                     DataRow row = memberEmail.NewRow();
-                    row["MemberID"] = memberID.ToString();
-                    
+                    row["MemberID"] = memberID.ToString().Trim();
+                    memberEmail.Rows.Add(row);
                 }
             }
             // Returning a list of memberIDs to send email reminders to
@@ -682,6 +687,13 @@ namespace Library
         private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void button_checkOverdue_Click(object sender, EventArgs e)
+        {
+            DataTable dt_overdueMembers = new DataTable();
+            dt_overdueMembers = AddMembersForEmails();
+            dataGridView_membersForEmail.DataSource = dt_overdueMembers;
         }
     }
 }
