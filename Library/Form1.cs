@@ -683,7 +683,56 @@ namespace Library
             // Returning a list of memberIDs to send email reminders to
             return memberEmail;
         }
+        // Getting e-mails and full names that are corresponding to specific MemberID
+        public DataTable GetEmailForMemberID()
+        {
+            DataTable memberInfo = new DataTable();
+            memberInfo.Columns.Add("full_name");
+            memberInfo.Columns.Add("email");
+            memberInfo.Columns.Add("id_member");
 
+            // Filling dictionary key with member ID datatable
+            for (int i = 0; i < dataGridView_membersForEmail.Rows.Count -1 ; i++)
+            {
+                var memberId = dataGridView_membersForEmail.Rows[i].Cells[0].Value;
+                string memberIdConverted = memberId.ToString().Trim();
+
+                try
+                {
+                    //Database.Instance.Conn.Open();
+                    NpgsqlCommand m_cmd = new NpgsqlCommand("SELECT full_name, email, id_member FROM member WHERE id_member = '" + memberIdConverted + "'", Database.Instance.Conn);
+                    NpgsqlDataAdapter member_a = new NpgsqlDataAdapter();
+                    member_a.SelectCommand = m_cmd;
+                    DataTable tempDataTable = new DataTable();
+                    member_a.Fill(tempDataTable);
+
+                    for(int c = 0; c < tempDataTable.Rows.Count; c++)
+                    {
+                        memberInfo.ImportRow(tempDataTable.Rows[0]);
+                        memberInfo.AcceptChanges();
+                        //MessageBox.Show(tempDataTable.Rows[0].ItemArray[0].ToString());
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("An error has occured during member to e-mail mapping. Please try again." + e);
+                }
+            }
+            return memberInfo;
+        }
+        // Placing warning in label if overdue members are found
+        public void DisplayOverdueWarning(DataTable dt)
+        {
+            if (dt != null)
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    label_overdueWarning.Text = "Warning! Overdue members found! Please send out notification e-mails!";
+                    label_overdueWarning.ForeColor = Color.Red;
+                }
+            }
+        }
         private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
         {
 
@@ -694,6 +743,16 @@ namespace Library
             DataTable dt_overdueMembers = new DataTable();
             dt_overdueMembers = AddMembersForEmails();
             dataGridView_membersForEmail.DataSource = dt_overdueMembers;
+
+            DisplayOverdueWarning(dt_overdueMembers);
+
+            DataTable table = GetEmailForMemberID();
+            MessageBox.Show(table.Rows[0].ItemArray[0].ToString() + " " + table.Rows[0].ItemArray[1].ToString() + " " + table.Rows[0].ItemArray[2].ToString());
+        }
+
+        private void button_clearLogs_Click(object sender, EventArgs e)
+        {
+            richTextBox_emailLogs.Text = "";
         }
     }
 }
