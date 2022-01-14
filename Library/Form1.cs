@@ -780,46 +780,44 @@ namespace Library
                 Credentials = new NetworkCredential()
                 {
                     UserName = "librarysystem.management32@gmail.com",
-                    Password = "bnccutldmwzpthwq"
+                    Password = "bnccutldmwzpthwq" // Generated password
                 }
             };
 
             // Setting up from e-mail address
             MailAddress fromEmail = new MailAddress("librarysystem.management32@gmail.com", "Library System");
 
-            // Setting up reciever e-mail address
-            MailAddress toEmail = new MailAddress("testtttttttt44@gmail.com", "Test DisplayName");
-
-            // Setting up e-mail message details
-            MailMessage msg = new MailMessage
+            for (int i = 0; i <= table.Rows.Count - 1; i++)
             {
-                From = fromEmail,
-                // Title
-                Subject = "Overdue book!",
-                Body = "Hello, you have an overdue that you have borrowed from our library. Please return it back."
+                // Setting up reciever e-mail address
+                MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
 
-            };
-            msg.To.Add(toEmail);
+                // Setting up e-mail message details
+                MailMessage msg = new MailMessage
+                {
+                    From = fromEmail,
+                    // Title
+                    Subject = "Overdue book!",
+                    Body = "Hello " + table.Rows[i].ItemArray[0].ToString().Trim() + " member " + table.Rows[i].ItemArray[2].ToString().Trim() + "! You have exceeded your book return date for our library. Please return the book(s) as soon as possible!"
 
-            // Creating event handler to check for errors
-            client.SendCompleted += Client_SendCompleted;
-            client.SendMailAsync(msg);
+                };
+                msg.To.Add(toEmail);
 
-            MessageBox.Show(table.Rows[0].ItemArray[0].ToString() + " " + table.Rows[0].ItemArray[1].ToString() + " " + table.Rows[0].ItemArray[2].ToString());
-        }
-
-        private void Client_SendCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                MessageBox.Show("An error has occured during mailing!");
-                // Continue app if error happens
-                return;
+                try
+                {
+                    client.Send(msg);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent to member " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Error in sending reminder e-mails!");
+                    richTextBox_emailLogs.AppendText(Environment.NewLine);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! Sending unsuccesful to " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                }
             }
-            else
-            {
-                MessageBox.Show("E-mails sent succesfully!");
-            }
+
+            MessageBox.Show("All e-mails sent succesfully!");
         }
     }
 }
