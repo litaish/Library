@@ -780,7 +780,7 @@ namespace Library
                 Credentials = new NetworkCredential()
                 {
                     UserName = "librarysystem.management32@gmail.com",
-                    Password = "bnccutldmwzpthwq" // Generated password
+                    Password = "bnccutldmwzpthwq" // Only app can use
                 }
             };
 
