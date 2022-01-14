@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using Npgsql;
 using Library.Utils;
 using System.Globalization;
+using System.Net.Mail;
+using System.Net;
 
 namespace Library
 {
@@ -745,14 +747,79 @@ namespace Library
             dataGridView_membersForEmail.DataSource = dt_overdueMembers;
 
             DisplayOverdueWarning(dt_overdueMembers);
-
-            DataTable table = GetEmailForMemberID();
-            MessageBox.Show(table.Rows[0].ItemArray[0].ToString() + " " + table.Rows[0].ItemArray[1].ToString() + " " + table.Rows[0].ItemArray[2].ToString());
         }
 
         private void button_clearLogs_Click(object sender, EventArgs e)
         {
             richTextBox_emailLogs.Text = "";
+        }
+
+        private void button_sendEmails_Click(object sender, EventArgs e)
+        {
+            DataTable table = GetEmailForMemberID();
+
+            // Checking if overdue members table is empty
+            var isEmpty = table.Rows.Count == 0;
+            if (isEmpty)
+            {
+                MessageBox.Show("No overdue members found!");
+                return;
+            }
+
+            // Setting up client
+            SmtpClient client = new SmtpClient()
+            {
+                // Client properties
+                Host = "smtp.gmail.com", // SMTP server for e-mail
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false, // Use custom credentials
+
+                // Credentials to send from
+                Credentials = new NetworkCredential()
+                {
+                    UserName = "librarysystem.management32@gmail.com",
+                    Password = "bnccutldmwzpthwq"
+                }
+            };
+
+            // Setting up from e-mail address
+            MailAddress fromEmail = new MailAddress("librarysystem.management32@gmail.com", "Library System");
+
+            // Setting up reciever e-mail address
+            MailAddress toEmail = new MailAddress("testtttttttt44@gmail.com", "Test DisplayName");
+
+            // Setting up e-mail message details
+            MailMessage msg = new MailMessage
+            {
+                From = fromEmail,
+                // Title
+                Subject = "Overdue book!",
+                Body = "Hello, you have an overdue that you have borrowed from our library. Please return it back."
+
+            };
+            msg.To.Add(toEmail);
+
+            // Creating event handler to check for errors
+            client.SendCompleted += Client_SendCompleted;
+            client.SendMailAsync(msg);
+
+            MessageBox.Show(table.Rows[0].ItemArray[0].ToString() + " " + table.Rows[0].ItemArray[1].ToString() + " " + table.Rows[0].ItemArray[2].ToString());
+        }
+
+        private void Client_SendCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                MessageBox.Show("An error has occured during mailing!");
+                // Continue app if error happens
+                return;
+            }
+            else
+            {
+                MessageBox.Show("E-mails sent succesfully!");
+            }
         }
     }
 }
