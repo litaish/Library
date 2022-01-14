@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Npgsql;
 using Library.Utils;
+using System.Globalization;
+using System.Net.Mail;
+using System.Net;
 
 namespace Library
 {
@@ -381,6 +384,7 @@ namespace Library
                 genreAdapter.Update((DataTable)dataGridView_genre.DataSource);
                 authorAdapter.Update((DataTable)dataGridView_author.DataSource);
                 languageAdapter.Update((DataTable)dataGridView_language.DataSource);
+
             }
             catch (Exception ex)
             {
@@ -644,6 +648,176 @@ namespace Library
                     dgv.Rows[e.RowIndex].Cells["availability"].Style.ForeColor = Color.Red;
                 }
             }
+        }
+        // Returns datatable of member IDs that book return date is overdue and returned is false
+        public DataTable AddMembersForEmails()
+        {
+            // Initalizing a datatable that will save all member IDs that match the condition
+            DataTable memberEmail = new DataTable();
+            DataColumn memberColumn = new DataColumn();
+            memberEmail.Columns.Add(memberColumn);
+            memberColumn.ColumnName = "MemberID";
+
+            DateTime dayToday = DateTime.Today;
+            string s_today = dayToday.ToString("MM/dd/yyyy HH:mm");
+
+            // Looping through all borrowings table due date column values.
+            for (int i = 0; i < advancedDataGridView_borrowings.RowCount - 1; i++)
+            {
+                // Index of date_due = 4
+                var cellValue = advancedDataGridView_borrowings.Rows[i].Cells[4].Value.ToString();
+                // Changing cellvalue date format to mm/dd/yyy format
+
+                DateTime convertedDate = Convert.ToDateTime(cellValue);
+                string formattedConvertedDate = convertedDate.ToString("MM/dd/yyyy HH:mm");
+                // Index of member_id = 1
+                var memberID = advancedDataGridView_borrowings.Rows[i].Cells[1].Value;
+                // Index of is_returned = 5
+                var isReturned = advancedDataGridView_borrowings.Rows[i].Cells[5].Value.ToString();
+
+                if (formattedConvertedDate.Trim() == s_today.ToString().Trim() && isReturned != "True")
+                {
+                    DataRow row = memberEmail.NewRow();
+                    row["MemberID"] = memberID.ToString().Trim();
+                    memberEmail.Rows.Add(row);
+                }
+            }
+            // Returning a list of memberIDs to send email reminders to
+            return memberEmail;
+        }
+        // Getting e-mails and full names that are corresponding to specific MemberID
+        public DataTable GetEmailForMemberID()
+        {
+            DataTable memberInfo = new DataTable();
+            memberInfo.Columns.Add("full_name");
+            memberInfo.Columns.Add("email");
+            memberInfo.Columns.Add("id_member");
+
+            // Filling dictionary key with member ID datatable
+            for (int i = 0; i < dataGridView_membersForEmail.Rows.Count -1 ; i++)
+            {
+                var memberId = dataGridView_membersForEmail.Rows[i].Cells[0].Value;
+                string memberIdConverted = memberId.ToString().Trim();
+
+                try
+                {
+                    //Database.Instance.Conn.Open();
+                    NpgsqlCommand m_cmd = new NpgsqlCommand("SELECT full_name, email, id_member FROM member WHERE id_member = '" + memberIdConverted + "'", Database.Instance.Conn);
+                    NpgsqlDataAdapter member_a = new NpgsqlDataAdapter();
+                    member_a.SelectCommand = m_cmd;
+                    DataTable tempDataTable = new DataTable();
+                    member_a.Fill(tempDataTable);
+
+                    for(int c = 0; c < tempDataTable.Rows.Count; c++)
+                    {
+                        memberInfo.ImportRow(tempDataTable.Rows[0]);
+                        memberInfo.AcceptChanges();
+                        //MessageBox.Show(tempDataTable.Rows[0].ItemArray[0].ToString());
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("An error has occured during member to e-mail mapping. Please try again." + e);
+                }
+            }
+            return memberInfo;
+        }
+        // Placing warning in label if overdue members are found
+        public void DisplayOverdueWarning(DataTable dt)
+        {
+            if (dt != null)
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    label_overdueWarning.Text = "Warning! Overdue members found! Please send out notification e-mails!";
+                    label_overdueWarning.ForeColor = Color.Red;
+                }
+            }
+        }
+        private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void button_checkOverdue_Click(object sender, EventArgs e)
+        {
+            DataTable dt_overdueMembers = new DataTable();
+            dt_overdueMembers = AddMembersForEmails();
+            dataGridView_membersForEmail.DataSource = dt_overdueMembers;
+
+            DisplayOverdueWarning(dt_overdueMembers);
+        }
+
+        private void button_clearLogs_Click(object sender, EventArgs e)
+        {
+            richTextBox_emailLogs.Text = "";
+        }
+
+        private void button_sendEmails_Click(object sender, EventArgs e)
+        {
+            DataTable table = GetEmailForMemberID();
+
+            // Checking if overdue members table is empty
+            var isEmpty = table.Rows.Count == 0;
+            if (isEmpty)
+            {
+                MessageBox.Show("No overdue members found!");
+                return;
+            }
+
+            // Setting up client
+            SmtpClient client = new SmtpClient()
+            {
+                // Client properties
+                Host = "smtp.gmail.com", // SMTP server for e-mail
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false, // Use custom credentials
+
+                // Credentials to send from
+                Credentials = new NetworkCredential()
+                {
+                    UserName = "librarysystem.management32@gmail.com",
+                    Password = "bnccutldmwzpthwq" // Generated password
+                }
+            };
+
+            // Setting up from e-mail address
+            MailAddress fromEmail = new MailAddress("librarysystem.management32@gmail.com", "Library System");
+
+            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            {
+                // Setting up reciever e-mail address
+                MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
+
+                // Setting up e-mail message details
+                MailMessage msg = new MailMessage
+                {
+                    From = fromEmail,
+                    // Title
+                    Subject = "Overdue book!",
+                    Body = "Hello " + table.Rows[i].ItemArray[0].ToString().Trim() + " member " + table.Rows[i].ItemArray[2].ToString().Trim() + "! You have exceeded your book return date for our library. Please return the book(s) as soon as possible!"
+
+                };
+                msg.To.Add(toEmail);
+
+                try
+                {
+                    client.Send(msg);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent to member " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Error in sending reminder e-mails!");
+                    richTextBox_emailLogs.AppendText(Environment.NewLine);
+                    richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! Sending unsuccesful to " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                }
+            }
+
+            MessageBox.Show("All e-mails sent succesfully!");
         }
     }
 }
