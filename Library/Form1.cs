@@ -12,6 +12,10 @@ using Library.Utils;
 using System.Globalization;
 using System.Net.Mail;
 using System.Net;
+using System.Diagnostics;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using System.IO;
 
 namespace Library
 {
@@ -875,7 +879,9 @@ namespace Library
                 int bookCountAll = Convert.ToInt32(countByGenreAll.Rows[i]["count"]);
 
                 this.chart_bookStatistics.Series["Available books"].Points.AddXY(genreNameAll, bookCountAll);
-
+            }
+            for (int i = 0; i < countByGenreUnavailable.Rows.Count; i++)
+            {
                 string genreNameUnavailable = countByGenreUnavailable.Rows[i]["genre_name"].ToString();
                 int bookCountUnavailable = Convert.ToInt32(countByGenreUnavailable.Rows[i]["count"]);
 
@@ -884,6 +890,59 @@ namespace Library
             // Showing values on chart bars
             chart_bookStatistics.Series["Available books"].IsValueShownAsLabel = true;
             chart_bookStatistics.Series["Borrowed books"].IsValueShownAsLabel = true;
+        }
+        private void button_exportToPDF_Click(object sender, EventArgs e)
+        {
+            DateTime dateNow = DateTime.Now;
+            string total = CountBooks();
+
+            // Create a new document with sizes
+            Document doc = new Document(iTextSharp.text.PageSize.LETTER, 10, 10, 42, 35);
+            PdfWriter pdfWriter = PdfWriter.GetInstance(doc, new FileStream("C:\\temp\\Statistics.pdf", FileMode.Create));
+
+            // Open document to write
+            doc.Open();
+            // First paragraph that contains general information
+            Paragraph paragraph1 = new Paragraph("Statististics for each book genre in library on " + dateNow + "\n\n" + "Total books in library: " + total + "\n\n");
+            doc.Add(paragraph1);
+
+            var chartImage = new MemoryStream();
+            // Generates an image and defines format (.png). 
+            chart_bookStatistics.SaveImage(chartImage, System.Windows.Forms.DataVisualization.Charting.ChartImageFormat.Png);
+            // Image of chart
+            iTextSharp.text.Image chart_image = iTextSharp.text.Image.GetInstance(chartImage.GetBuffer());
+            // Scale to fit
+            chart_image.ScalePercent(60);
+            // Add image to document
+            doc.Add(chart_image);
+
+            doc.Close();
+        }
+        private void button_showFines_Click(object sender, EventArgs e)
+        {
+            DataTable dt_MemberFines = new DataTable();
+            NpgsqlDataAdapter finesAdapter = Adapters.Instance.MembersFines;
+            finesAdapter.Fill(dt_MemberFines);
+            advancedDataGridView_memberFines.DataSource = dt_MemberFines;
+
+            // Changing column name strings
+            advancedDataGridView_memberFines.Columns["id_member"].HeaderText = "Member #";
+            advancedDataGridView_memberFines.Columns["full_name"].HeaderText = "Full name";
+            advancedDataGridView_memberFines.Columns["card_number"].HeaderText = "Card #";
+            advancedDataGridView_memberFines.Columns["fine"].HeaderText = "Fine amount";
+        }
+        private void advancedDataGridView_memberFines_SortStringChanged(object sender, EventArgs e)
+        {
+            BindingSource bsMemberFines = new BindingSource();
+            bsMemberFines.DataSource = advancedDataGridView_memberFines.DataSource;
+            bsMemberFines.Sort = advancedDataGridView_memberFines.SortString;
+        }
+
+        private void advancedDataGridView_memberFines_FilterStringChanged(object sender, EventArgs e)
+        {
+            BindingSource bsMemberFines = new BindingSource();
+            bsMemberFines.DataSource = advancedDataGridView_memberFines.DataSource;
+            bsMemberFines.Filter = advancedDataGridView_memberFines.FilterString;
         }
     }
 }

@@ -30,6 +30,7 @@ namespace Library.Utils
         private NpgsqlDataAdapter cardAdapter;
         private NpgsqlDataAdapter countPerGenreAll;
         private NpgsqlDataAdapter countPerGenreUnavailable;
+        private NpgsqlDataAdapter membersFines;
 
         public NpgsqlDataAdapter BookAdapter { get => bookAdapter; set => bookAdapter = value; }
         public NpgsqlDataAdapter CountryAdapter { get => countryAdapter; set => countryAdapter = value; }
@@ -42,6 +43,7 @@ namespace Library.Utils
         public NpgsqlDataAdapter CardAdapter { get => cardAdapter; set => cardAdapter = value; }
         public NpgsqlDataAdapter CountPerGenreAll { get => countPerGenreAll; set => countPerGenreAll = value; }
         public NpgsqlDataAdapter CountPerGenreUnavailable { get => countPerGenreUnavailable; set => countPerGenreUnavailable = value; }
+        public NpgsqlDataAdapter MembersFines { get => membersFines; set => membersFines = value; }
 
 
 
@@ -247,6 +249,9 @@ namespace Library.Utils
 
             // FOR RETRIEVING COUNT DATA FOR BOOKS PER GENRE
             CreateBookCountByGenreAdapters();
+
+            // ADAPTERS FOR FINE PAGE
+            CreateFinesForMembersAdapters();
         }
 
         public void CreateAuthorAdapter()
@@ -280,6 +285,12 @@ namespace Library.Utils
             NpgsqlCommand countBooksPerGenreUnavailable_cmd = new NpgsqlCommand("SELECT genre.genre_name, COUNT(book.id_genre) FROM book INNER JOIN genre ON book.id_genre = genre.id_genre WHERE book.availability = 'UNAVAILABLE' GROUP BY genre.genre_name", conn);
             countPerGenreUnavailable = new NpgsqlDataAdapter();
             countPerGenreUnavailable.SelectCommand = countBooksPerGenreUnavailable_cmd;
+        }
+        public void CreateFinesForMembersAdapters()
+        {
+            NpgsqlCommand s_memberFine_cmd = new NpgsqlCommand("SELECT id_member, full_name, card_number, fine FROM member", conn);
+            membersFines = new NpgsqlDataAdapter();
+            membersFines.SelectCommand = s_memberFine_cmd;
         }
         public void HandleTreeAdapters(NodeLabelEditEventArgs e)
         {
