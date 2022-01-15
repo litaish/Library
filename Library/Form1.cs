@@ -57,6 +57,11 @@ namespace Library
             dateTimePicker_book.CustomFormat = "MM/dd/yyyy";
 
             chart_bookStatistics.Hide();
+
+            // Default values for Numeric Up Down control
+            this.numericUpDown_fineAmount.Value = new decimal(new int[] {0, 0, 0, 0});
+            this.numericUpDown_fineAmount.Minimum = new decimal(new int[] {0, 0, 0, 0});
+            this.numericUpDown_fineAmount.Increment = new decimal(new int[] {5, 0, 0, 0});
         }
 
         public void SubLevel(int parentid, TreeNode parentNode)
@@ -943,6 +948,85 @@ namespace Library
             BindingSource bsMemberFines = new BindingSource();
             bsMemberFines.DataSource = advancedDataGridView_memberFines.DataSource;
             bsMemberFines.Filter = advancedDataGridView_memberFines.FilterString;
+        }
+        // Displaying selected datagridview cells member # and shows it in a textbox
+        private void advancedDataGridView_memberFines_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            int selectedRowIndex = e.RowIndex;
+            if (selectedRowIndex >= 0)
+            {
+                DataGridViewRow selectedRow = advancedDataGridView_memberFines.Rows[selectedRowIndex];
+                textBox_selectedMemberData.Text = selectedRow.Cells[0].Value.ToString();
+            }
+        }
+        // Confirmation message box, ask - question asked, ifYes - message displayed if confirmed
+        private void button_clearFine_Click(object sender, EventArgs e)
+        {
+            var confirmResult = MessageBox.Show("Are you sure you want to clear fine?", "Confirm", MessageBoxButtons.YesNo);
+            if (confirmResult == DialogResult.Yes)
+            {
+                this.numericUpDown_fineAmount.Value = new decimal(new int[] { 0, 0, 0, 0 });
+                MessageBox.Show("Fine cleared!");
+
+                // On clear untick checkboxes
+                checkBox_OverdueFine.Checked = false;
+                checkBox_damaged.Checked = false;
+                checkBox_lost.Checked = false;
+            }
+            else
+            {
+                MessageBox.Show("Clear cancelled.");
+            }
+        }
+
+        private void checkBox_OverdueFine_Click(object sender, EventArgs e)
+        {
+            // Overdue - 10$ fine
+            if (checkBox_OverdueFine.Checked)
+            {
+                // Add 10 to value
+                this.numericUpDown_fineAmount.Value += 10;
+            }
+            else
+            {
+                // Subtract 10 from value
+                this.numericUpDown_fineAmount.Value -= 10;
+            }
+        }
+
+        private void checkBox_damaged_Click(object sender, EventArgs e)
+        {
+            // Damaged - 10 $ fine
+            if (checkBox_damaged.Checked)
+            {
+                // Add 10 to value
+                this.numericUpDown_fineAmount.Value += 10;
+            }
+            else
+            {
+                // Subtract 10 from value
+                this.numericUpDown_fineAmount.Value -= 10;
+            }
+        }
+
+        private void checkBox_lost_Click(object sender, EventArgs e)
+        {
+            // Lost - 20$ fine
+            if (checkBox_lost.Checked)
+            {
+                // Add 20 to value
+                this.numericUpDown_fineAmount.Value += 20;
+            }
+            else
+            {
+                // Subtract 20 from value
+                this.numericUpDown_fineAmount.Value -= 20;
+            }
+        }
+
+        private void button_submitFine_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
