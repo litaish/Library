@@ -968,10 +968,7 @@ namespace Library
                 this.numericUpDown_fineAmount.Value = new decimal(new int[] { 0, 0, 0, 0 });
                 MessageBox.Show("Fine cleared!");
 
-                // On clear untick checkboxes
-                checkBox_OverdueFine.Checked = false;
-                checkBox_damaged.Checked = false;
-                checkBox_lost.Checked = false;
+                ClearCheckBoxes();
             }
             else
             {
@@ -1023,10 +1020,52 @@ namespace Library
                 this.numericUpDown_fineAmount.Value -= 20;
             }
         }
-
+        public void ClearCheckBoxes()
+        {
+            // On clear untick checkboxes
+            checkBox_OverdueFine.Checked = false;
+            checkBox_damaged.Checked = false;
+            checkBox_lost.Checked = false;
+        }
         private void button_submitFine_Click(object sender, EventArgs e)
         {
+            // Get numeric up down value
+            decimal fineVal = this.numericUpDown_fineAmount.Value;
+            // Get member ID value
+            string memberIDval = textBox_selectedMemberData.Text.Trim();
 
+            var confirmResult = MessageBox.Show("Are you sure you want to add a fine for user " + memberIDval + "?", "Confirm", MessageBoxButtons.YesNo);
+            if (confirmResult == DialogResult.Yes)
+            {
+                try
+                {
+                    NpgsqlCommand addVal_cmd = new NpgsqlCommand("UPDATE member SET fine = fine + " + fineVal + " WHERE id_member = '" + memberIDval + "'", Database.Instance.Conn);
+                    Database.Instance.Conn.Open();
+                    addVal_cmd.ExecuteNonQuery();
+                    Database.Instance.Conn.Close();
+
+                    // If a fine gets removed (0) value
+                    if (fineVal == 0)
+                    {
+                        MessageBox.Show("Fine succesfully removed for member " + memberIDval + "!");
+                    }
+                    // If a fine has a value (> 0 )
+                    else
+                    {
+                        MessageBox.Show("Fine succesfully added for member " + memberIDval + "! This member cannot borrow any more books till they pay their fine.");
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("An error has occured during updating fine value. Please try again.");
+                }
+
+                ClearCheckBoxes();
+            }
+            else
+            {
+                MessageBox.Show("Fine cancelled");
+            }
         }
     }
 }
