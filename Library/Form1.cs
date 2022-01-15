@@ -51,6 +51,8 @@ namespace Library
             dateTimePicker_dateDue.CustomFormat = "MM/dd/yyyy";
             dateTimePicker_book.Format = DateTimePickerFormat.Custom;
             dateTimePicker_book.CustomFormat = "MM/dd/yyyy";
+
+            chart_bookStatistics.Hide();
         }
 
         public void SubLevel(int parentid, TreeNode parentNode)
@@ -712,7 +714,6 @@ namespace Library
                     {
                         memberInfo.ImportRow(tempDataTable.Rows[0]);
                         memberInfo.AcceptChanges();
-                        //MessageBox.Show(tempDataTable.Rows[0].ItemArray[0].ToString());
                     }
 
                 }
@@ -806,6 +807,8 @@ namespace Library
                 try
                 {
                     client.Send(msg);
+
+                    // Displaying log messages in richtextbox
                     richTextBox_emailLogs.AppendText(Environment.NewLine);
                     richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent to member " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
                 }
@@ -818,6 +821,69 @@ namespace Library
             }
 
             MessageBox.Show("All e-mails sent succesfully!");
+        }
+        public string CountBooks()
+        {
+            string result = "";
+
+            NpgsqlCommand countBooks_cmd = new NpgsqlCommand("SELECT COUNT(*) FROM book", Database.Instance.Conn);
+            Database.Instance.Conn.Open();
+            var bookCount = countBooks_cmd.ExecuteScalar().ToString();
+            Database.Instance.Conn.Close();
+            result = bookCount;
+
+            return result;
+        }
+        
+        public DataTable CountBookByGenreAll()
+        {
+            // Stores genre names and the count of books each genre has
+            DataTable dt = new DataTable();
+
+            NpgsqlDataAdapter countAll = Adapters.Instance.CountPerGenreAll;
+            countAll.Fill(dt);
+
+            return dt;
+        }
+        public DataTable CountBookByGenreUnavailable()
+        {
+            // Stores genre names and the count of books each genre has
+            DataTable dt = new DataTable();
+
+            NpgsqlDataAdapter countUnavailable = Adapters.Instance.CountPerGenreUnavailable;
+            countUnavailable.Fill(dt);
+
+            return dt;
+        }
+        private void button_showStatistics_Click(object sender, EventArgs e)
+        {
+            chart_bookStatistics.Show();
+            // Prevents adding a new set of series on each button click
+            this.chart_bookStatistics.Series[0].Points.Clear();
+            this.chart_bookStatistics.Series[1].Points.Clear();
+
+            DataTable countByGenreAll = CountBookByGenreAll();
+            DataTable countByGenreUnavailable = CountBookByGenreUnavailable();
+
+            string total = CountBooks();
+            label_totalBooks.Text = "Total books in library: " + total;
+
+            // Going through retrieved DataTable data and adding chart series points and values
+            for (int i = 0; i < countByGenreAll.Rows.Count; i++)
+            {
+                string genreNameAll = countByGenreAll.Rows[i]["genre_name"].ToString();
+                int bookCountAll = Convert.ToInt32(countByGenreAll.Rows[i]["count"]);
+
+                this.chart_bookStatistics.Series["Available books"].Points.AddXY(genreNameAll, bookCountAll);
+
+                string genreNameUnavailable = countByGenreUnavailable.Rows[i]["genre_name"].ToString();
+                int bookCountUnavailable = Convert.ToInt32(countByGenreUnavailable.Rows[i]["count"]);
+
+                this.chart_bookStatistics.Series["Borrowed books"].Points.AddXY(genreNameUnavailable, bookCountUnavailable); // other bar (darker)
+            }
+            // Showing values on chart bars
+            chart_bookStatistics.Series["Available books"].IsValueShownAsLabel = true;
+            chart_bookStatistics.Series["Borrowed books"].IsValueShownAsLabel = true;
         }
     }
 }

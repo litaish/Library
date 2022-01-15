@@ -28,6 +28,8 @@ namespace Library.Utils
         private NpgsqlDataAdapter borrowingsAdapter;
         private NpgsqlDataAdapter memberAdapter;
         private NpgsqlDataAdapter cardAdapter;
+        private NpgsqlDataAdapter countPerGenreAll;
+        private NpgsqlDataAdapter countPerGenreUnavailable;
 
         public NpgsqlDataAdapter BookAdapter { get => bookAdapter; set => bookAdapter = value; }
         public NpgsqlDataAdapter CountryAdapter { get => countryAdapter; set => countryAdapter = value; }
@@ -38,6 +40,8 @@ namespace Library.Utils
         public NpgsqlDataAdapter BorrowingsAdapter { get => borrowingsAdapter; set => borrowingsAdapter = value; }
         public NpgsqlDataAdapter MemberAdapter { get => memberAdapter; set => memberAdapter = value; }
         public NpgsqlDataAdapter CardAdapter { get => cardAdapter; set => cardAdapter = value; }
+        public NpgsqlDataAdapter CountPerGenreAll { get => countPerGenreAll; set => countPerGenreAll = value; }
+        public NpgsqlDataAdapter CountPerGenreUnavailable { get => countPerGenreUnavailable; set => countPerGenreUnavailable = value; }
 
 
 
@@ -240,6 +244,9 @@ namespace Library.Utils
             languageAdapter.InsertCommand = i_cmd_language;
             languageAdapter.UpdateCommand = u_cmd_language;
             languageAdapter.DeleteCommand = d_cmd_language;
+
+            // FOR RETRIEVING COUNT DATA FOR BOOKS PER GENRE
+            CreateBookCountByGenreAdapters();
         }
 
         public void CreateAuthorAdapter()
@@ -262,7 +269,18 @@ namespace Library.Utils
             authorAdapter.UpdateCommand = u_cmd_author;
             authorAdapter.DeleteCommand = d_cmd_author;
         }
-        
+        public void CreateBookCountByGenreAdapters()
+        {
+            // Per genre (all)
+            NpgsqlCommand countBooksPerGenreAll_cmd = new NpgsqlCommand("SELECT genre.genre_name, COUNT(book.id_genre) FROM book INNER JOIN genre ON book.id_genre = genre.id_genre GROUP BY genre.genre_name", conn);
+            countPerGenreAll = new NpgsqlDataAdapter();
+            countPerGenreAll.SelectCommand = countBooksPerGenreAll_cmd;
+
+            // Per genre unavailable
+            NpgsqlCommand countBooksPerGenreUnavailable_cmd = new NpgsqlCommand("SELECT genre.genre_name, COUNT(book.id_genre) FROM book INNER JOIN genre ON book.id_genre = genre.id_genre WHERE book.availability = 'UNAVAILABLE' GROUP BY genre.genre_name", conn);
+            countPerGenreUnavailable = new NpgsqlDataAdapter();
+            countPerGenreUnavailable.SelectCommand = countBooksPerGenreUnavailable_cmd;
+        }
         public void HandleTreeAdapters(NodeLabelEditEventArgs e)
         {
             DataTable tempTable = new DataTable();
