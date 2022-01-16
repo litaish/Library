@@ -1257,5 +1257,13 @@ namespace Library
         {
             StopRecording();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string barcode = textBox_barcodeVideo.Text.Trim();
+
+            DataTable dt = DisplayRecievedBarcodeData(barcode);
+            dataGridView_videoBook.DataSource = dt;
+        }
     }
 }
