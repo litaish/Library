@@ -1032,7 +1032,7 @@ namespace Library
             // Get numeric up down value
             decimal fineVal = this.numericUpDown_fineAmount.Value;
             // Get member ID value
-            string memberIDval = textBox_selectedMemberData.Text.Trim();
+            string memberIDval = GetFineMemberID();
 
             var confirmResult = MessageBox.Show("Are you sure you want to add a fine for user " + memberIDval + "?", "Confirm", MessageBoxButtons.YesNo);
             if (confirmResult == DialogResult.Yes)
@@ -1066,6 +1066,92 @@ namespace Library
             {
                 MessageBox.Show("Fine cancelled");
             }
+        }
+        public string GetFineMemberID()
+        {
+            string memberIDval = textBox_selectedMemberData.Text.Trim();
+
+            return memberIDval;
+        }
+        // Gets list of penalties applied to a member. Values checked from checkboxes.
+        public List<string> GetPenaltyList()
+        {
+            List<string> penalties = new List<string>();
+
+            if (checkBox_damaged.Checked)
+            {
+                penalties.Add("Damaged book - 10$");
+            }
+            if (checkBox_lost.Checked)
+            {
+                penalties.Add("Lost book - 20$");
+            }
+            if (checkBox_OverdueFine.Checked)
+            {
+                penalties.Add("Overdue book - 10$");
+            }
+
+            return penalties;
+        }
+        private void button_exportFinesToPDF_Click(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            // Create a new document with sizes
+            Document doc = new Document(iTextSharp.text.PageSize.LETTER, 10, 10, 42, 35);
+            PdfWriter pdfWriter = PdfWriter.GetInstance(doc, new FileStream("C:\\temp\\Fine.pdf", FileMode.Create));
+
+            // Open document to write
+            doc.Open();
+            // First paragraph that contains general information
+            Paragraph paragraph1 = new Paragraph("Fine generated at " + now + "\n\n");
+            doc.Add(paragraph1);
+
+            // Recieving Member ID  from textbox
+            string user = GetFineMemberID();
+            Paragraph paragraph2 = new Paragraph("Penalty set for user " + user +  "\n\n");
+            doc.Add(paragraph2);
+
+            // Write DGV
+            PdfPTable table = new PdfPTable(advancedDataGridView_memberFines.Columns.Count);
+            // Add headers from DGV to table
+            for (int i = 0; i < advancedDataGridView_memberFines.Columns.Count; i++)
+            {
+                table.AddCell(new Phrase(advancedDataGridView_memberFines.Columns[i].HeaderText));
+            }
+            // Flag first row as header
+            table.HeaderRows = 1;
+
+            // Add main data rows from DGV to table
+            for (int j = 0; j < advancedDataGridView_memberFines.Rows.Count ; j++)
+            {
+                for (int k = 0; k < advancedDataGridView_memberFines.Columns.Count; k++)
+                {
+                    if (advancedDataGridView_memberFines[k, j].Value != null)
+                    {
+                        table.AddCell(new Phrase(advancedDataGridView_memberFines[k, j].Value.ToString()));
+                    }
+                }
+            }
+            // Add created table to document
+            doc.Add(table);
+
+            Paragraph paragraph3 = new Paragraph("Warning! All penalties must be paid before another book can be borrowed from the library! \n" + "Penalties set: \n");
+            doc.Add(paragraph3);
+            // Applied penalty list
+            List<string> appliedPenalties = GetPenaltyList();
+            // Creating an iTextSharp valid list
+            List list = new List(List.ORDERED);
+            foreach (string item in appliedPenalties)
+            {
+                list.Add(item);
+            }
+            doc.Add(list);
+
+            // Total paragraph
+            Paragraph paragraph4 = new Paragraph("Total = " + this.numericUpDown_fineAmount.Value.ToString() + "$");
+            doc.Add(paragraph4);
+
+            doc.Close();
         }
     }
 }
