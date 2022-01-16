@@ -224,6 +224,18 @@ namespace Library
             this.label_45 = new System.Windows.Forms.Label();
             this.dataGridView_barcodeResult = new System.Windows.Forms.DataGridView();
             this.label29 = new System.Windows.Forms.Label();
+            this.tabPage9 = new System.Windows.Forms.TabPage();
+            this.label30 = new System.Windows.Forms.Label();
+            this.comboBox_captureChoice = new System.Windows.Forms.ComboBox();
+            this.pictureBox_video = new System.Windows.Forms.PictureBox();
+            this.label31 = new System.Windows.Forms.Label();
+            this.button_startStopRecord = new System.Windows.Forms.Button();
+            this.label33 = new System.Windows.Forms.Label();
+            this.textBox_barcodeVideo = new System.Windows.Forms.TextBox();
+            this.label35 = new System.Windows.Forms.Label();
+            this.dataGridView_videoBook = new System.Windows.Forms.DataGridView();
+            this.label32 = new System.Windows.Forms.Label();
+            this.button_stopRecording = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.tabStatistics.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -296,6 +308,9 @@ namespace Library
             this.tabPage8.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_barCode)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_barcodeResult)).BeginInit();
+            this.tabPage9.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_video)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView_videoBook)).BeginInit();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -346,6 +361,7 @@ namespace Library
             this.tabStatistics.Controls.Add(this.tabPage6);
             this.tabStatistics.Controls.Add(this.tabPage7);
             this.tabStatistics.Controls.Add(this.tabPage8);
+            this.tabStatistics.Controls.Add(this.tabPage9);
             this.tabStatistics.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.tabStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabStatistics.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -2327,6 +2343,138 @@ namespace Library
             this.label29.Size = new System.Drawing.Size(0, 21);
             this.label29.TabIndex = 8;
             // 
+            // tabPage9
+            // 
+            this.tabPage9.BackColor = System.Drawing.Color.Bisque;
+            this.tabPage9.Controls.Add(this.button_stopRecording);
+            this.tabPage9.Controls.Add(this.label32);
+            this.tabPage9.Controls.Add(this.dataGridView_videoBook);
+            this.tabPage9.Controls.Add(this.label35);
+            this.tabPage9.Controls.Add(this.textBox_barcodeVideo);
+            this.tabPage9.Controls.Add(this.label33);
+            this.tabPage9.Controls.Add(this.button_startStopRecord);
+            this.tabPage9.Controls.Add(this.label31);
+            this.tabPage9.Controls.Add(this.pictureBox_video);
+            this.tabPage9.Controls.Add(this.comboBox_captureChoice);
+            this.tabPage9.Controls.Add(this.label30);
+            this.tabPage9.Location = new System.Drawing.Point(4, 22);
+            this.tabPage9.Name = "tabPage9";
+            this.tabPage9.Size = new System.Drawing.Size(1265, 589);
+            this.tabPage9.TabIndex = 8;
+            this.tabPage9.Text = "Barcode scanning (via camera)";
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label30.Location = new System.Drawing.Point(52, 35);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(124, 21);
+            this.label30.TabIndex = 0;
+            this.label30.Text = "Capture device:";
+            // 
+            // comboBox_captureChoice
+            // 
+            this.comboBox_captureChoice.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBox_captureChoice.FormattingEnabled = true;
+            this.comboBox_captureChoice.Location = new System.Drawing.Point(182, 35);
+            this.comboBox_captureChoice.Name = "comboBox_captureChoice";
+            this.comboBox_captureChoice.Size = new System.Drawing.Size(428, 29);
+            this.comboBox_captureChoice.TabIndex = 1;
+            // 
+            // pictureBox_video
+            // 
+            this.pictureBox_video.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.pictureBox_video.Location = new System.Drawing.Point(56, 81);
+            this.pictureBox_video.Name = "pictureBox_video";
+            this.pictureBox_video.Size = new System.Drawing.Size(554, 281);
+            this.pictureBox_video.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBox_video.TabIndex = 2;
+            this.pictureBox_video.TabStop = false;
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label31.Location = new System.Drawing.Point(52, 386);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(164, 21);
+            this.label31.TabIndex = 3;
+            this.label31.Text = "Start capturing video";
+            // 
+            // button_startStopRecord
+            // 
+            this.button_startStopRecord.BackColor = System.Drawing.Color.BurlyWood;
+            this.button_startStopRecord.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button_startStopRecord.Location = new System.Drawing.Point(56, 410);
+            this.button_startStopRecord.Name = "button_startStopRecord";
+            this.button_startStopRecord.Size = new System.Drawing.Size(100, 32);
+            this.button_startStopRecord.TabIndex = 4;
+            this.button_startStopRecord.Text = "Start ";
+            this.button_startStopRecord.UseVisualStyleBackColor = false;
+            this.button_startStopRecord.Click += new System.EventHandler(this.button_startStopRecord_Click);
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label33.Location = new System.Drawing.Point(673, 35);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(75, 21);
+            this.label33.TabIndex = 6;
+            this.label33.Text = "Barcode:";
+            // 
+            // textBox_barcodeVideo
+            // 
+            this.textBox_barcodeVideo.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBox_barcodeVideo.Location = new System.Drawing.Point(754, 32);
+            this.textBox_barcodeVideo.Name = "textBox_barcodeVideo";
+            this.textBox_barcodeVideo.ReadOnly = true;
+            this.textBox_barcodeVideo.Size = new System.Drawing.Size(367, 29);
+            this.textBox_barcodeVideo.TabIndex = 7;
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label35.Location = new System.Drawing.Point(56, 468);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(88, 21);
+            this.label35.TabIndex = 9;
+            this.label35.Text = "Book data:";
+            // 
+            // dataGridView_videoBook
+            // 
+            this.dataGridView_videoBook.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dataGridView_videoBook.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView_videoBook.Location = new System.Drawing.Point(56, 492);
+            this.dataGridView_videoBook.Name = "dataGridView_videoBook";
+            this.dataGridView_videoBook.ReadOnly = true;
+            this.dataGridView_videoBook.Size = new System.Drawing.Size(1065, 56);
+            this.dataGridView_videoBook.TabIndex = 10;
+            // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label32.Location = new System.Drawing.Point(268, 386);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(164, 21);
+            this.label32.TabIndex = 11;
+            this.label32.Text = "Stop capturing video";
+            // 
+            // button_stopRecording
+            // 
+            this.button_stopRecording.BackColor = System.Drawing.Color.BurlyWood;
+            this.button_stopRecording.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button_stopRecording.Location = new System.Drawing.Point(272, 410);
+            this.button_stopRecording.Name = "button_stopRecording";
+            this.button_stopRecording.Size = new System.Drawing.Size(100, 32);
+            this.button_stopRecording.TabIndex = 12;
+            this.button_stopRecording.Text = "Stop";
+            this.button_stopRecording.UseVisualStyleBackColor = false;
+            this.button_stopRecording.Click += new System.EventHandler(this.button_stopRecording_Click);
+            // 
             // LibraryForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2339,6 +2487,8 @@ namespace Library
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LibraryForm";
             this.Text = "Library system";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LibraryForm_FormClosing);
+            this.Load += new System.EventHandler(this.LibraryForm_Load);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tabStatistics.ResumeLayout(false);
@@ -2428,6 +2578,10 @@ namespace Library
             this.tabPage8.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_barCode)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_barcodeResult)).EndInit();
+            this.tabPage9.ResumeLayout(false);
+            this.tabPage9.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_video)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView_videoBook)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -2591,6 +2745,18 @@ namespace Library
         private DataGridView dataGridView_barcodeResult;
         private Label label_45;
         private Label label29;
+        private TabPage tabPage9;
+        private ComboBox comboBox_captureChoice;
+        private Label label30;
+        private PictureBox pictureBox_video;
+        private Button button_startStopRecord;
+        private Label label31;
+        private TextBox textBox_barcodeVideo;
+        private Label label33;
+        private DataGridView dataGridView_videoBook;
+        private Label label35;
+        private Label label32;
+        private Button button_stopRecording;
     }
 }
 

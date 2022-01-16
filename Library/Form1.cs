@@ -17,6 +17,7 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.IO;
 using ZXing;
+using AForge.Video.DirectShow;
 
 namespace Library
 {
@@ -41,6 +42,9 @@ namespace Library
         DataTable borrowingsTable;
         DataTable memberTable;
         DataTable cardTable;
+
+        FilterInfoCollection filterInfoCollection;
+        VideoCaptureDevice videoCaptureDevice;
         public LibraryForm()
         {
             InitializeComponent();
@@ -1195,6 +1199,63 @@ namespace Library
             // Show book in DGV
             DataTable dt = DisplayRecievedBarcodeData(barcode);
             dataGridView_barcodeResult.DataSource = dt;
+        }
+
+        private void LibraryForm_Load(object sender, EventArgs e)
+        {
+            // Detect camera from computer
+            filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            // Detected camera name gets added to combo box
+            foreach (FilterInfo device in filterInfoCollection)
+            {
+                comboBox_captureChoice.Items.Add(device.Name);
+            }
+            comboBox_captureChoice.SelectedIndex = 0;
+        }
+
+        private void button_startStopRecord_Click(object sender, EventArgs e)
+        {
+            // Define capture device (selected capture device from combo box)
+            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[comboBox_captureChoice.SelectedIndex].MonikerString);
+
+            // Create a new event that allows to update pictures taken from the capture device to the picture frame
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+
+            videoCaptureDevice.Start();
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
+        {
+            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+            // Decoding frame
+            BarcodeReader reader = new BarcodeReader();
+            // Result saved in variable
+            var result = reader.Decode(bitmap);
+            if (result != null)
+            {
+                textBox_barcodeVideo.Invoke(new MethodInvoker(delegate ()
+                {
+                    textBox_barcodeVideo.Text = result.ToString();
+                }));
+            }
+            pictureBox_video.Image = bitmap;
+        }
+        public void StopRecording()
+        {
+            if (videoCaptureDevice != null)
+            {
+                videoCaptureDevice.Stop();
+            }
+        }
+        private void LibraryForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // On form close, stop web camera recording (in case stop button is not pressed)
+            StopRecording();
+        }
+
+        private void button_stopRecording_Click(object sender, EventArgs e)
+        {
+            StopRecording();
         }
     }
 }

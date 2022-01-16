@@ -85,3 +85,9 @@ C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.presentation.dll
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.xml
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.presentation.xml
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.dll
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.Video.DirectShow.dll
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.Video.dll
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.xml
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.Video.xml
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\AForge.Video.DirectShow.xml
