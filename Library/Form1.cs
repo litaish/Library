@@ -1154,7 +1154,18 @@ namespace Library
 
             doc.Close();
         }
+        // Takes scanned barcode result from textbox and gets book result that corresponds to this barcode
+        public DataTable DisplayRecievedBarcodeData(string barcode)
+        {
+            DataTable barcodeBook = new DataTable();
 
+            NpgsqlCommand s_barcodeResult_cmd = new NpgsqlCommand("SELECT * FROM book WHERE id_book = '" + barcode + "'",Database.Instance.Conn);
+            NpgsqlDataAdapter da = new NpgsqlDataAdapter();
+            da.SelectCommand = s_barcodeResult_cmd;
+            da.Fill(barcodeBook);
+
+            return barcodeBook;
+        }
         private void button_openFile_Click(object sender, EventArgs e)
         {
             // Using ZXING library that supports barcode processing
@@ -1179,6 +1190,11 @@ namespace Library
                     }
                 }
             }
+            //Get textbox string to pass in function
+            string barcode = textBox_barCode.Text.Trim();
+            // Show book in DGV
+            DataTable dt = DisplayRecievedBarcodeData(barcode);
+            dataGridView_barcodeResult.DataSource = dt;
         }
     }
 }
