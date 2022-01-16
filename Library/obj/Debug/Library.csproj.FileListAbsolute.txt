@@ -81,3 +81,7 @@ C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\obj\Debug\Libra
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\BouncyCastle.Crypto.dll
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\itextsharp.dll
 C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\itextsharp.xml
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.dll
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.presentation.dll
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.xml
+C:\Users\Lita\Documents\School\4_SEM\CSHARP_4SEM\Library\Library\bin\Debug\zxing.presentation.xml

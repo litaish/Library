@@ -16,6 +16,7 @@ using System.Diagnostics;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.IO;
+using ZXing;
 
 namespace Library
 {
@@ -1152,6 +1153,32 @@ namespace Library
             doc.Add(paragraph4);
 
             doc.Close();
+        }
+
+        private void button_openFile_Click(object sender, EventArgs e)
+        {
+            // Using ZXING library that supports barcode processing
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "JPG|*.jpg" })
+            {
+                // If user accepts to open
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    // Convert barcode images into strings
+                    pictureBox_barCode.Image = System.Drawing.Image.FromFile(ofd.FileName);
+                    BarcodeReader barReader = new BarcodeReader();
+                    // Result is saved in this variable
+                    var result = barReader.Decode((Bitmap)pictureBox_barCode.Image); // Img converted to bitmap
+                    // If result is not empty
+                    if (result != null)
+                    {
+                        textBox_barCode.Text = result.ToString();
+                    }
+                    else
+                    {
+                        textBox_barCode.Text = "Error! Cannot read barcode!";
+                    }
+                }
+            }
         }
     }
 }
