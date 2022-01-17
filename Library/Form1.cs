@@ -717,7 +717,6 @@ namespace Library
 
                 try
                 {
-                    //Database.Instance.Conn.Open();
                     NpgsqlCommand m_cmd = new NpgsqlCommand("SELECT full_name, email, id_member FROM member WHERE id_member = '" + memberIdConverted + "'", Database.Instance.Conn);
                     NpgsqlDataAdapter member_a = new NpgsqlDataAdapter();
                     member_a.SelectCommand = m_cmd;
@@ -773,13 +772,13 @@ namespace Library
         {
             DataTable table = GetEmailForMemberID();
 
-            // Checking if overdue members table is empty
-            var isEmpty = table.Rows.Count == 0;
-            if (isEmpty)
-            {
-                MessageBox.Show("No overdue members found!");
-                return;
-            }
+            //// Checking if overdue members table is empty
+            //var isEmpty = table.Rows.Count == 0;
+            //if (isEmpty)
+            //{
+            //    MessageBox.Show("No overdue members found!");
+            //    return;
+            //}
 
             // Setting up client
             SmtpClient client = new SmtpClient()
@@ -794,48 +793,65 @@ namespace Library
                 // Credentials to send from
                 Credentials = new NetworkCredential()
                 {
-                    UserName = "librarysystem.management32@gmail.com",
-                    Password = "bnccutldmwzpthwq" // Only app can use
+                    UserName = "librarysys67@gmail.com",
+                    Password = "icglisyusnmigcxc" // Only app can use
                 }
             };
 
             // Setting up from e-mail address
-            MailAddress fromEmail = new MailAddress("librarysystem.management32@gmail.com", "Library System");
+            MailAddress fromEmail = new MailAddress("librarysys67@gmail.com", "Library System");
 
-            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            //// Setting up reciever e-mail address
+            //MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
+
+            // Setting up e-mail message details
+            MailMessage msg = new MailMessage()
             {
-                // Setting up reciever e-mail address
-                MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
+                From = fromEmail,
+                // Title
+                Subject = "Overdue book!",
+                Body = "Hello. You have a book that is over the due date. Please return it back to us as soon as possible!"
 
-                // Setting up e-mail message details
-                MailMessage msg = new MailMessage
-                {
-                    From = fromEmail,
-                    // Title
-                    Subject = "Overdue book!",
-                    Body = "Hello " + table.Rows[i].ItemArray[0].ToString().Trim() + " member " + table.Rows[i].ItemArray[2].ToString().Trim() + "! You have exceeded your book return date for our library. Please return the book(s) as soon as possible!"
+            };
+                msg.To.Add(setupEmailsFromTable(table));
 
-                };
-                msg.To.Add(toEmail);
+            client.SendCompleted += Client_SendCompleted;
+            client.SendMailAsync(msg);
 
-                try
-                {
-                    client.Send(msg);
-
-                    // Displaying log messages in richtextbox
-                    richTextBox_emailLogs.AppendText(Environment.NewLine);
-                    richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent to member " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("Error in sending reminder e-mails!");
-                    richTextBox_emailLogs.AppendText(Environment.NewLine);
-                    richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! Sending unsuccesful to " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
-                }
-            }
+            // Displaying log messages in richtextbox
+            richTextBox_emailLogs.AppendText(Environment.NewLine);
+            richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent!");
 
             MessageBox.Show("All e-mails sent succesfully!");
         }
+
+        private string setupEmailsFromTable(DataTable emailsTable)
+        {
+            StringBuilder emails = new StringBuilder();
+            foreach (DataRow row in emailsTable.Rows)
+            {
+                emails.Append(row.ItemArray[1].ToString().Trim());
+            }
+            var delimiters = new[] { ',', ';' };
+
+            var addresses = emails.ToString().Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Join(",", addresses);
+        }
+
+        private void Client_SendCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            // If errors occur during sending
+            if (e.Error != null)
+            {
+                MessageBox.Show("Error has occured during e-mail sending!");
+                // Show error in logs
+                richTextBox_emailLogs.AppendText(Environment.NewLine);
+                richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! E-mail unsuccesfully sent! ");
+                return;
+            }
+        }
+
         public string CountBooks()
         {
             string result = "";
@@ -876,6 +892,7 @@ namespace Library
             this.chart_bookStatistics.Series[0].Points.Clear();
             this.chart_bookStatistics.Series[1].Points.Clear();
 
+            // Table contains - genre name, count of books per genre
             DataTable countByGenreAll = CountBookByGenreAll();
             DataTable countByGenreUnavailable = CountBookByGenreUnavailable();
 
@@ -1199,6 +1216,11 @@ namespace Library
             // Show book in DGV
             DataTable dt = DisplayRecievedBarcodeData(barcode);
             dataGridView_barcodeResult.DataSource = dt;
+
+            dataGridView_barcodeResult.Columns["id_author"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_genre"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_language"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_publisher"].Visible = false;
         }
 
         private void LibraryForm_Load(object sender, EventArgs e)
@@ -1226,19 +1248,27 @@ namespace Library
 
         private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
-            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
-            // Decoding frame
-            BarcodeReader reader = new BarcodeReader();
-            // Result saved in variable
-            var result = reader.Decode(bitmap);
-            if (result != null)
+            try
             {
-                textBox_barcodeVideo.Invoke(new MethodInvoker(delegate ()
+                Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+                // Decoding frame
+                BarcodeReader reader = new BarcodeReader();
+                // Result saved in variable
+                var result = reader.Decode(bitmap);
+                if (result != null)
                 {
-                    textBox_barcodeVideo.Text = result.ToString();
-                }));
+                    textBox_barcodeVideo.Invoke(new MethodInvoker(delegate ()
+                    {
+                        textBox_barcodeVideo.Text = result.ToString();
+                    }));
+                }
+                pictureBox_video.Image = bitmap;
             }
-            pictureBox_video.Image = bitmap;
+            catch(Exception ex)
+            {
+                //
+                Console.WriteLine(ex.Message);
+            }
         }
         public void StopRecording()
         {
@@ -1264,6 +1294,17 @@ namespace Library
 
             DataTable dt = DisplayRecievedBarcodeData(barcode);
             dataGridView_videoBook.DataSource = dt;
+
+            dataGridView_videoBook.Columns["id_author"].Visible = false;
+            dataGridView_videoBook.Columns["id_genre"].Visible = false;
+            dataGridView_videoBook.Columns["id_language"].Visible = false;
+            dataGridView_videoBook.Columns["id_publisher"].Visible = false;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // Clears textbox where barcode is located
+            textBox_barcodeVideo.Clear();
         }
     }
 }
