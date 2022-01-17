@@ -12,6 +12,12 @@ using Library.Utils;
 using System.Globalization;
 using System.Net.Mail;
 using System.Net;
+using System.Diagnostics;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using System.IO;
+using ZXing;
+using AForge.Video.DirectShow;
 
 namespace Library
 {
@@ -36,6 +42,9 @@ namespace Library
         DataTable borrowingsTable;
         DataTable memberTable;
         DataTable cardTable;
+
+        FilterInfoCollection filterInfoCollection;
+        VideoCaptureDevice videoCaptureDevice;
         public LibraryForm()
         {
             InitializeComponent();
@@ -51,6 +60,13 @@ namespace Library
             dateTimePicker_dateDue.CustomFormat = "MM/dd/yyyy";
             dateTimePicker_book.Format = DateTimePickerFormat.Custom;
             dateTimePicker_book.CustomFormat = "MM/dd/yyyy";
+
+            chart_bookStatistics.Hide();
+
+            // Default values for Numeric Up Down control
+            this.numericUpDown_fineAmount.Value = new decimal(new int[] {0, 0, 0, 0});
+            this.numericUpDown_fineAmount.Minimum = new decimal(new int[] {0, 0, 0, 0});
+            this.numericUpDown_fineAmount.Increment = new decimal(new int[] {5, 0, 0, 0});
         }
 
         public void SubLevel(int parentid, TreeNode parentNode)
@@ -701,7 +717,6 @@ namespace Library
 
                 try
                 {
-                    //Database.Instance.Conn.Open();
                     NpgsqlCommand m_cmd = new NpgsqlCommand("SELECT full_name, email, id_member FROM member WHERE id_member = '" + memberIdConverted + "'", Database.Instance.Conn);
                     NpgsqlDataAdapter member_a = new NpgsqlDataAdapter();
                     member_a.SelectCommand = m_cmd;
@@ -712,7 +727,6 @@ namespace Library
                     {
                         memberInfo.ImportRow(tempDataTable.Rows[0]);
                         memberInfo.AcceptChanges();
-                        //MessageBox.Show(tempDataTable.Rows[0].ItemArray[0].ToString());
                     }
 
                 }
@@ -758,13 +772,13 @@ namespace Library
         {
             DataTable table = GetEmailForMemberID();
 
-            // Checking if overdue members table is empty
-            var isEmpty = table.Rows.Count == 0;
-            if (isEmpty)
-            {
-                MessageBox.Show("No overdue members found!");
-                return;
-            }
+            //// Checking if overdue members table is empty
+            //var isEmpty = table.Rows.Count == 0;
+            //if (isEmpty)
+            //{
+            //    MessageBox.Show("No overdue members found!");
+            //    return;
+            //}
 
             // Setting up client
             SmtpClient client = new SmtpClient()
@@ -779,45 +793,518 @@ namespace Library
                 // Credentials to send from
                 Credentials = new NetworkCredential()
                 {
-                    UserName = "librarysystem.management32@gmail.com",
-                    Password = "bnccutldmwzpthwq" // Generated password
+                    UserName = "librarysys67@gmail.com",
+                    Password = "icglisyusnmigcxc" // Only app can use
                 }
             };
 
             // Setting up from e-mail address
-            MailAddress fromEmail = new MailAddress("librarysystem.management32@gmail.com", "Library System");
+            MailAddress fromEmail = new MailAddress("librarysys67@gmail.com", "Library System");
 
-            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            //// Setting up reciever e-mail address
+            //MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
+
+            // Setting up e-mail message details
+            MailMessage msg = new MailMessage()
             {
-                // Setting up reciever e-mail address
-                MailAddress toEmail = new MailAddress(table.Rows[i].ItemArray[1].ToString().Trim(), table.Rows[i].ItemArray[0].ToString().Trim());
+                From = fromEmail,
+                // Title
+                Subject = "Overdue book!",
+                Body = "Hello. You have a book that is over the due date. Please return it back to us as soon as possible!"
 
-                // Setting up e-mail message details
-                MailMessage msg = new MailMessage
-                {
-                    From = fromEmail,
-                    // Title
-                    Subject = "Overdue book!",
-                    Body = "Hello " + table.Rows[i].ItemArray[0].ToString().Trim() + " member " + table.Rows[i].ItemArray[2].ToString().Trim() + "! You have exceeded your book return date for our library. Please return the book(s) as soon as possible!"
+            };
+                msg.To.Add(setupEmailsFromTable(table));
 
-                };
-                msg.To.Add(toEmail);
+            client.SendCompleted += Client_SendCompleted;
+            client.SendMailAsync(msg);
 
+            // Displaying log messages in richtextbox
+            richTextBox_emailLogs.AppendText(Environment.NewLine);
+            richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent!");
+
+            MessageBox.Show("All e-mails sent succesfully!");
+        }
+
+        private string setupEmailsFromTable(DataTable emailsTable)
+        {
+            StringBuilder emails = new StringBuilder();
+            foreach (DataRow row in emailsTable.Rows)
+            {
+                emails.Append(row.ItemArray[1].ToString().Trim());
+            }
+            var delimiters = new[] { ',', ';' };
+
+            var addresses = emails.ToString().Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Join(",", addresses);
+        }
+
+        private void Client_SendCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            // If errors occur during sending
+            if (e.Error != null)
+            {
+                MessageBox.Show("Error has occured during e-mail sending!");
+                // Show error in logs
+                richTextBox_emailLogs.AppendText(Environment.NewLine);
+                richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! E-mail unsuccesfully sent! ");
+                return;
+            }
+        }
+
+        public string CountBooks()
+        {
+            string result = "";
+
+            NpgsqlCommand countBooks_cmd = new NpgsqlCommand("SELECT COUNT(*) FROM book", Database.Instance.Conn);
+            Database.Instance.Conn.Open();
+            var bookCount = countBooks_cmd.ExecuteScalar().ToString();
+            Database.Instance.Conn.Close();
+            result = bookCount;
+
+            return result;
+        }
+        
+        public DataTable CountBookByGenreAll()
+        {
+            // Stores genre names and the count of books each genre has
+            DataTable dt = new DataTable();
+
+            NpgsqlDataAdapter countAll = Adapters.Instance.CountPerGenreAll;
+            countAll.Fill(dt);
+
+            return dt;
+        }
+        public DataTable CountBookByGenreUnavailable()
+        {
+            // Stores genre names and the count of books each genre has
+            DataTable dt = new DataTable();
+
+            NpgsqlDataAdapter countUnavailable = Adapters.Instance.CountPerGenreUnavailable;
+            countUnavailable.Fill(dt);
+
+            return dt;
+        }
+        private void button_showStatistics_Click(object sender, EventArgs e)
+        {
+            chart_bookStatistics.Show();
+            // Prevents adding a new set of series on each button click
+            this.chart_bookStatistics.Series[0].Points.Clear();
+            this.chart_bookStatistics.Series[1].Points.Clear();
+
+            // Table contains - genre name, count of books per genre
+            DataTable countByGenreAll = CountBookByGenreAll();
+            DataTable countByGenreUnavailable = CountBookByGenreUnavailable();
+
+            string total = CountBooks();
+            label_totalBooks.Text = "Total books in library: " + total;
+
+            // Going through retrieved DataTable data and adding chart series points and values
+            for (int i = 0; i < countByGenreAll.Rows.Count; i++)
+            {
+                string genreNameAll = countByGenreAll.Rows[i]["genre_name"].ToString();
+                int bookCountAll = Convert.ToInt32(countByGenreAll.Rows[i]["count"]);
+
+                this.chart_bookStatistics.Series["Available books"].Points.AddXY(genreNameAll, bookCountAll);
+            }
+            for (int i = 0; i < countByGenreUnavailable.Rows.Count; i++)
+            {
+                string genreNameUnavailable = countByGenreUnavailable.Rows[i]["genre_name"].ToString();
+                int bookCountUnavailable = Convert.ToInt32(countByGenreUnavailable.Rows[i]["count"]);
+
+                this.chart_bookStatistics.Series["Borrowed books"].Points.AddXY(genreNameUnavailable, bookCountUnavailable); // other bar (darker)
+            }
+            // Showing values on chart bars
+            chart_bookStatistics.Series["Available books"].IsValueShownAsLabel = true;
+            chart_bookStatistics.Series["Borrowed books"].IsValueShownAsLabel = true;
+        }
+        private void button_exportToPDF_Click(object sender, EventArgs e)
+        {
+            DateTime dateNow = DateTime.Now;
+            string total = CountBooks();
+
+            // Create a new document with sizes
+            Document doc = new Document(iTextSharp.text.PageSize.LETTER, 10, 10, 42, 35);
+            PdfWriter pdfWriter = PdfWriter.GetInstance(doc, new FileStream("C:\\temp\\Statistics.pdf", FileMode.Create));
+
+            // Open document to write
+            doc.Open();
+            // First paragraph that contains general information
+            Paragraph paragraph1 = new Paragraph("Statististics for each book genre in library on " + dateNow + "\n\n" + "Total books in library: " + total + "\n\n");
+            doc.Add(paragraph1);
+
+            var chartImage = new MemoryStream();
+            // Generates an image and defines format (.png). 
+            chart_bookStatistics.SaveImage(chartImage, System.Windows.Forms.DataVisualization.Charting.ChartImageFormat.Png);
+            // Image of chart
+            iTextSharp.text.Image chart_image = iTextSharp.text.Image.GetInstance(chartImage.GetBuffer());
+            // Scale to fit
+            chart_image.ScalePercent(60);
+            // Add image to document
+            doc.Add(chart_image);
+
+            doc.Close();
+        }
+        private void button_showFines_Click(object sender, EventArgs e)
+        {
+            DataTable dt_MemberFines = new DataTable();
+            NpgsqlDataAdapter finesAdapter = Adapters.Instance.MembersFines;
+            finesAdapter.Fill(dt_MemberFines);
+            advancedDataGridView_memberFines.DataSource = dt_MemberFines;
+
+            // Changing column name strings
+            advancedDataGridView_memberFines.Columns["id_member"].HeaderText = "Member #";
+            advancedDataGridView_memberFines.Columns["full_name"].HeaderText = "Full name";
+            advancedDataGridView_memberFines.Columns["card_number"].HeaderText = "Card #";
+            advancedDataGridView_memberFines.Columns["fine"].HeaderText = "Fine amount";
+        }
+        private void advancedDataGridView_memberFines_SortStringChanged(object sender, EventArgs e)
+        {
+            BindingSource bsMemberFines = new BindingSource();
+            bsMemberFines.DataSource = advancedDataGridView_memberFines.DataSource;
+            bsMemberFines.Sort = advancedDataGridView_memberFines.SortString;
+        }
+
+        private void advancedDataGridView_memberFines_FilterStringChanged(object sender, EventArgs e)
+        {
+            BindingSource bsMemberFines = new BindingSource();
+            bsMemberFines.DataSource = advancedDataGridView_memberFines.DataSource;
+            bsMemberFines.Filter = advancedDataGridView_memberFines.FilterString;
+        }
+        // Displaying selected datagridview cells member # and shows it in a textbox
+        private void advancedDataGridView_memberFines_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            int selectedRowIndex = e.RowIndex;
+            if (selectedRowIndex >= 0)
+            {
+                DataGridViewRow selectedRow = advancedDataGridView_memberFines.Rows[selectedRowIndex];
+                textBox_selectedMemberData.Text = selectedRow.Cells[0].Value.ToString();
+            }
+        }
+        // Confirmation message box, ask - question asked, ifYes - message displayed if confirmed
+        private void button_clearFine_Click(object sender, EventArgs e)
+        {
+            var confirmResult = MessageBox.Show("Are you sure you want to clear fine?", "Confirm", MessageBoxButtons.YesNo);
+            if (confirmResult == DialogResult.Yes)
+            {
+                this.numericUpDown_fineAmount.Value = new decimal(new int[] { 0, 0, 0, 0 });
+                MessageBox.Show("Fine cleared!");
+
+                ClearCheckBoxes();
+            }
+            else
+            {
+                MessageBox.Show("Clear cancelled.");
+            }
+        }
+
+        private void checkBox_OverdueFine_Click(object sender, EventArgs e)
+        {
+            // Overdue - 10$ fine
+            if (checkBox_OverdueFine.Checked)
+            {
+                // Add 10 to value
+                this.numericUpDown_fineAmount.Value += 10;
+            }
+            else
+            {
+                // Subtract 10 from value
+                this.numericUpDown_fineAmount.Value -= 10;
+            }
+        }
+
+        private void checkBox_damaged_Click(object sender, EventArgs e)
+        {
+            // Damaged - 10 $ fine
+            if (checkBox_damaged.Checked)
+            {
+                // Add 10 to value
+                this.numericUpDown_fineAmount.Value += 10;
+            }
+            else
+            {
+                // Subtract 10 from value
+                this.numericUpDown_fineAmount.Value -= 10;
+            }
+        }
+
+        private void checkBox_lost_Click(object sender, EventArgs e)
+        {
+            // Lost - 20$ fine
+            if (checkBox_lost.Checked)
+            {
+                // Add 20 to value
+                this.numericUpDown_fineAmount.Value += 20;
+            }
+            else
+            {
+                // Subtract 20 from value
+                this.numericUpDown_fineAmount.Value -= 20;
+            }
+        }
+        public void ClearCheckBoxes()
+        {
+            // On clear untick checkboxes
+            checkBox_OverdueFine.Checked = false;
+            checkBox_damaged.Checked = false;
+            checkBox_lost.Checked = false;
+        }
+        private void button_submitFine_Click(object sender, EventArgs e)
+        {
+            // Get numeric up down value
+            decimal fineVal = this.numericUpDown_fineAmount.Value;
+            // Get member ID value
+            string memberIDval = GetFineMemberID();
+
+            var confirmResult = MessageBox.Show("Are you sure you want to add a fine for user " + memberIDval + "?", "Confirm", MessageBoxButtons.YesNo);
+            if (confirmResult == DialogResult.Yes)
+            {
                 try
                 {
-                    client.Send(msg);
-                    richTextBox_emailLogs.AppendText(Environment.NewLine);
-                    richTextBox_emailLogs.AppendText(Environment.NewLine + "E-mail succesfully sent to member " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                    NpgsqlCommand addVal_cmd = new NpgsqlCommand("UPDATE member SET fine = fine + " + fineVal + " WHERE id_member = '" + memberIDval + "'", Database.Instance.Conn);
+                    Database.Instance.Conn.Open();
+                    addVal_cmd.ExecuteNonQuery();
+                    Database.Instance.Conn.Close();
+
+                    // If a fine gets removed (0) value
+                    if (fineVal == 0)
+                    {
+                        MessageBox.Show("Fine succesfully removed for member " + memberIDval + "!");
+                    }
+                    // If a fine has a value (> 0 )
+                    else
+                    {
+                        MessageBox.Show("Fine succesfully added for member " + memberIDval + "! This member cannot borrow any more books till they pay their fine.");
+                    }
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("Error in sending reminder e-mails!");
-                    richTextBox_emailLogs.AppendText(Environment.NewLine);
-                    richTextBox_emailLogs.AppendText(Environment.NewLine + "Warning! Sending unsuccesful to " + table.Rows[i].ItemArray[2].ToString().Trim() + " " + table.Rows[i].ItemArray[1].ToString().Trim());
+                    MessageBox.Show("An error has occured during updating fine value. Please try again.");
                 }
+
+                ClearCheckBoxes();
+            }
+            else
+            {
+                MessageBox.Show("Fine cancelled");
+            }
+        }
+        public string GetFineMemberID()
+        {
+            string memberIDval = textBox_selectedMemberData.Text.Trim();
+
+            return memberIDval;
+        }
+        // Gets list of penalties applied to a member. Values checked from checkboxes.
+        public List<string> GetPenaltyList()
+        {
+            List<string> penalties = new List<string>();
+
+            if (checkBox_damaged.Checked)
+            {
+                penalties.Add("Damaged book - 10$");
+            }
+            if (checkBox_lost.Checked)
+            {
+                penalties.Add("Lost book - 20$");
+            }
+            if (checkBox_OverdueFine.Checked)
+            {
+                penalties.Add("Overdue book - 10$");
             }
 
-            MessageBox.Show("All e-mails sent succesfully!");
+            return penalties;
+        }
+        private void button_exportFinesToPDF_Click(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            // Create a new document with sizes
+            Document doc = new Document(iTextSharp.text.PageSize.LETTER, 10, 10, 42, 35);
+            PdfWriter pdfWriter = PdfWriter.GetInstance(doc, new FileStream("C:\\temp\\Fine.pdf", FileMode.Create));
+
+            // Open document to write
+            doc.Open();
+            // First paragraph that contains general information
+            Paragraph paragraph1 = new Paragraph("Fine generated at " + now + "\n\n");
+            doc.Add(paragraph1);
+
+            // Recieving Member ID  from textbox
+            string user = GetFineMemberID();
+            Paragraph paragraph2 = new Paragraph("Penalty set for user " + user +  "\n\n");
+            doc.Add(paragraph2);
+
+            // Write DGV
+            PdfPTable table = new PdfPTable(advancedDataGridView_memberFines.Columns.Count);
+            // Add headers from DGV to table
+            for (int i = 0; i < advancedDataGridView_memberFines.Columns.Count; i++)
+            {
+                table.AddCell(new Phrase(advancedDataGridView_memberFines.Columns[i].HeaderText));
+            }
+            // Flag first row as header
+            table.HeaderRows = 1;
+
+            // Add main data rows from DGV to table
+            for (int j = 0; j < advancedDataGridView_memberFines.Rows.Count ; j++)
+            {
+                for (int k = 0; k < advancedDataGridView_memberFines.Columns.Count; k++)
+                {
+                    if (advancedDataGridView_memberFines[k, j].Value != null)
+                    {
+                        table.AddCell(new Phrase(advancedDataGridView_memberFines[k, j].Value.ToString()));
+                    }
+                }
+            }
+            // Add created table to document
+            doc.Add(table);
+
+            Paragraph paragraph3 = new Paragraph("Warning! All penalties must be paid before another book can be borrowed from the library! \n" + "Penalties set: \n");
+            doc.Add(paragraph3);
+            // Applied penalty list
+            List<string> appliedPenalties = GetPenaltyList();
+            // Creating an iTextSharp valid list
+            List list = new List(List.ORDERED);
+            foreach (string item in appliedPenalties)
+            {
+                list.Add(item);
+            }
+            doc.Add(list);
+
+            // Total paragraph
+            Paragraph paragraph4 = new Paragraph("Total = " + this.numericUpDown_fineAmount.Value.ToString() + "$");
+            doc.Add(paragraph4);
+
+            doc.Close();
+        }
+        // Takes scanned barcode result from textbox and gets book result that corresponds to this barcode
+        public DataTable DisplayRecievedBarcodeData(string barcode)
+        {
+            DataTable barcodeBook = new DataTable();
+
+            NpgsqlCommand s_barcodeResult_cmd = new NpgsqlCommand("SELECT * FROM book WHERE id_book = '" + barcode + "'",Database.Instance.Conn);
+            NpgsqlDataAdapter da = new NpgsqlDataAdapter();
+            da.SelectCommand = s_barcodeResult_cmd;
+            da.Fill(barcodeBook);
+
+            return barcodeBook;
+        }
+        private void button_openFile_Click(object sender, EventArgs e)
+        {
+            // Using ZXING library that supports barcode processing
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "JPG|*.jpg" })
+            {
+                // If user accepts to open
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    // Convert barcode images into strings
+                    pictureBox_barCode.Image = System.Drawing.Image.FromFile(ofd.FileName);
+                    BarcodeReader barReader = new BarcodeReader();
+                    // Result is saved in this variable
+                    var result = barReader.Decode((Bitmap)pictureBox_barCode.Image); // Img converted to bitmap
+                    // If result is not empty
+                    if (result != null)
+                    {
+                        textBox_barCode.Text = result.ToString();
+                    }
+                    else
+                    {
+                        textBox_barCode.Text = "Error! Cannot read barcode!";
+                    }
+                }
+            }
+            //Get textbox string to pass in function
+            string barcode = textBox_barCode.Text.Trim();
+            // Show book in DGV
+            DataTable dt = DisplayRecievedBarcodeData(barcode);
+            dataGridView_barcodeResult.DataSource = dt;
+
+            dataGridView_barcodeResult.Columns["id_author"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_genre"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_language"].Visible = false;
+            dataGridView_barcodeResult.Columns["id_publisher"].Visible = false;
+        }
+
+        private void LibraryForm_Load(object sender, EventArgs e)
+        {
+            // Detect camera from computer
+            filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            // Detected camera name gets added to combo box
+            foreach (FilterInfo device in filterInfoCollection)
+            {
+                comboBox_captureChoice.Items.Add(device.Name);
+            }
+            comboBox_captureChoice.SelectedIndex = 0;
+        }
+
+        private void button_startStopRecord_Click(object sender, EventArgs e)
+        {
+            // Define capture device (selected capture device from combo box)
+            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[comboBox_captureChoice.SelectedIndex].MonikerString);
+
+            // Create a new event that allows to update pictures taken from the capture device to the picture frame
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+
+            videoCaptureDevice.Start();
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
+        {
+            try
+            {
+                Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+                // Decoding frame
+                BarcodeReader reader = new BarcodeReader();
+                // Result saved in variable
+                var result = reader.Decode(bitmap);
+                if (result != null)
+                {
+                    textBox_barcodeVideo.Invoke(new MethodInvoker(delegate ()
+                    {
+                        textBox_barcodeVideo.Text = result.ToString();
+                    }));
+                }
+                pictureBox_video.Image = bitmap;
+            }
+            catch(Exception ex)
+            {
+                //
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public void StopRecording()
+        {
+            if (videoCaptureDevice != null)
+            {
+                videoCaptureDevice.Stop();
+            }
+        }
+        private void LibraryForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // On form close, stop web camera recording (in case stop button is not pressed)
+            StopRecording();
+        }
+
+        private void button_stopRecording_Click(object sender, EventArgs e)
+        {
+            StopRecording();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string barcode = textBox_barcodeVideo.Text.Trim();
+
+            DataTable dt = DisplayRecievedBarcodeData(barcode);
+            dataGridView_videoBook.DataSource = dt;
+
+            dataGridView_videoBook.Columns["id_author"].Visible = false;
+            dataGridView_videoBook.Columns["id_genre"].Visible = false;
+            dataGridView_videoBook.Columns["id_language"].Visible = false;
+            dataGridView_videoBook.Columns["id_publisher"].Visible = false;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // Clears textbox where barcode is located
+            textBox_barcodeVideo.Clear();
         }
     }
 }
